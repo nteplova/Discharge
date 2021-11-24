@@ -1885,31 +1885,46 @@ c--------------------------------------
 c--------------------------------------
 c choose step size
 c--------------------------------------
+       print *, 'choose step size'
+       print *, x, xsav, rbord, h
        dst3=(x-xsav)*(x+h-xsav)
        if(dst3.lt.zero.and.irep.eq.0) h=xsav-x
+       print *, x, h
        if(x.gt.rbord.and.h.gt.zero) then
         ind=2
+        print *,'ind=2 goto 20'
         go to 20
        end if
 10     dst1=(x-rbord)*(x+h-rbord)
+       print *, 'h=',h
        dst2=x*(x+h)
        if((dst1.lt.zero.and.irs.eq.-1).or.dst2.lt.zero) then
         h=h/2.d0
         if(dabs(h).lt.hmin1) then
          ind=4
+         print *, h, hmin1
+         print *,'ind=4 goto 20'
          go to 20
         end if
+        print *,'goto 10'
         go to 10
        end if
 c--------------------------------------
 c find solution at x=x+hdid
 c---------------------------------------
        ynz0=ynz
+       print *, 'difeq h=' ,h 
        call difeq(y,dydx,nvar,x,h,eps,yscal,hdid,hnext,extd2)
 20     continue
+       print *, '20 continue'
+       
        if(ind.ne.0) then !exit
+        print *, 'ind=', ind
         xsav=xsav+hsav
+        print *, xsav, hsav, x
+!        pause
         x2=x
+
         do i=1,nvar
          ystart(i)=y(i)
         end do
