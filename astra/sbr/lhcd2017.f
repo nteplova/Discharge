@@ -30,7 +30,7 @@ cc*********************************************************************
 cc   ipsy = number of polinomial decomposition coefficients
 cc           used for interpolation of Zakharov's moments.
 cc*********************************************************************
-
+!test
 cc*********************************************************************
 cc    Co-ordinates used in ray-tracing:
 cc         (x-x0)/rm=r*cos(teta)-delta-gamma*sin^2(teta) !sav2008 -gamma
