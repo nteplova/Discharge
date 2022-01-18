@@ -1,0 +1,108 @@
+!!!!!!!!!!!!!!! Physical parameters !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  0.25        ! Freq           RF frequency, GHz
+  2.0        ! xmi1           Mi1/Mp,  relative mass of ions 1
+  1.0        ! zi1            charge of ions 1
+  16.0       ! xmi2            Mi2/Mp,  relative mass of ions 2
+  8.0        ! zi2            charge of ions 2
+  0.0        ! dni2           Ni2/Ni1, relative density of ions 2
+  1.0        ! xmi3           Mi3/Mp,  relative mass of ions 3
+  1.0        ! zi3            charge of ions 3
+  0.0        ! dni3           Ni3/Ni1, relative density of ions 3
+!!!!!!!!!!!!!!! Parameters for alphas calculations !!!!!!!!!!!!!!!!!!!!!!!!!!
+  0          ! itend0         if = 0, no alphas
+  30.0       ! energy         max. perp. energy of alphas (MeV)
+  1.0        ! factor         factor in alpha source
+  0.3        ! dra            relative alpha source broadening (dr/a)
+  30         ! kv             V_perp  greed number
+!!!!!!!!!!!!!!! Numerical parameters !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  30         ! nr             radial grid number  <= 505
+  1e-06      ! hmin1          rel.(hr) min. step in the Fast comp. mode, <1.d0
+  0.0001     ! rrange         rel.(hr) size of a 'turning' point region, <1.d0
+  1e-06      ! eps            accuracy
+  1.5        ! hdrob          h4 correction
+  0.7        ! cleft          left Vz plato border shift (<1)
+  1.5        ! cright         right Vz plato border shift (>1)
+  0.25       ! cdel           (left part)/(Vz plato size)
+  0.999      ! rbord          relative radius of reflection, <1.
+  0.2        ! pchm           threshold between 'strong' and weak' absorption, <1.
+  10.01       ! pabs           part of remaining power interp. as absorption,%
+  0.0001     ! pgiter         relative accuracy to stop iterations
+  20         ! ni1            grid number in the left part of Vz plato
+  20         ! ni2            grid number in the right part of Vz plato
+  99         ! niterat        maximal number of iterations
+  20         ! nmaxm(1)       permitted reflections at 0 iteration
+  20         ! nmaxm(2)       permitted reflections at 1 iteration
+  20         ! nmaxm(3)       permitted reflections at 2 iteration
+  20         ! nmaxm(4)       permitted reflections at 3 iteration
+  1000       ! maxstep2       maximal steps' number in Fast comp. mode
+  1000       ! maxstep4       maximal steps' number in Slow comp. mode
+!!!!!!!!!!!!!!! Options !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  2          ! ipri           printing output monitoring: 0,1,2,3,4
+ -1          ! iw             initial mode (slow=1, fast=-1)
+  0          ! ismth          if=0, no smoothing in Ne(rho),Te(rho),Ti(rho)
+  0          ! ismthalf       if=0, no smoothing in D_alpha(vperp)
+  1          ! ismthout       if=0, no smoothing in output profiles
+ -1          ! inew           inew=0 for usual tokamak&Ntor_grill; 1 or 2 for g' in ST&Npol_grill
+  1          ! itor           +-1, Btor direction in right coord{drho,dteta,dfi}
+  1          ! ipol           +-1, Bpol direction in right coord{drho,dteta,dfi}
+!!!!!!!!!!!!!!! grill parameters !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  11         ! Zplus          upper grill corner in centimeters
+ -11         ! Zminus         lower grill corner in centimeters
+  21         ! ntet           theta grid number
+  251         ! nnz            iN_phi grid number
+!!positive Nfi; P_LH(a.units); points<1001
+0 0
+0 0
+0.0	-88888. !0.57 first value=part(%) of total power in positive spectrum.
+!!negative Nfi; P_LH(a.units); points number<1001, arbitrary spacing.
+7	3.727E-6
+7.04	9.93E-6
+7.08	2.542E-5
+7.12	6.252E-5
+7.16	1.477E-4
+7.2	3.355E-4
+7.24	7.318E-4
+7.28	0.00153
+7.32	0.00309
+7.36	0.00598
+7.4	0.01111
+7.44	0.01984
+7.48	0.03405
+7.52	0.05613
+7.56	0.08892
+7.6	0.1353
+7.64	0.1979
+7.68	0.278
+7.72	0.3753
+7.76	0.4868
+7.8	0.6065
+7.84	0.7261
+7.88	0.8353
+7.92	0.9231
+7.96	0.9802
+8	1
+8.04	0.9802
+8.08	0.9231
+8.12	0.8353
+8.16	0.7261
+8.2	0.6065
+8.24	0.4868
+8.28	0.3753
+8.32	0.278
+8.36	0.1979
+8.4	0.1353
+8.44	0.08892
+8.48	0.05613
+8.52	0.03405
+8.56	0.01984
+8.6	0.01111
+8.64	0.00598
+8.68	0.00309
+8.72	0.00153
+8.76	7.318E-4
+8.8	3.355E-4
+8.84	1.477E-4
+8.88	6.252E-5
+8.92	2.542E-5
+8.96	9.93E-6
+9	3.727E-6
