@@ -29,6 +29,11 @@ def clear_folder_contents(path):
 
 def copy_file(src, dst):
     try:
+        os.remove(dst)
+    except:
+        print('remove error')
+        
+    try:
         shutil.copyfile(src, dst)
         print(f" copy {src} to {dst}")
  

@@ -44,7 +44,8 @@ cc    Interval for r:  0.<= r <=1.
 cc*********************************************************************
 
       tcur=time
-      inpt=NA1          ! ASTRA radial grid number
+      inpt=NA1   
+      write(*,*) 'NA1=', NA1       ! ASTRA radial grid number
       outpe=zero
       p_in=dble(QLH)    ! input LH power, MW
 !!!      if(p_in.le.zero) return
@@ -148,6 +149,7 @@ cccc   "poloidal magnetic field":
         if(c_m.ne.zero) then
          do i=1,inpt
           outpem(i)=pe_m*outpem(i)/c_m
+          write(*,*)'i=',i,'ROC=',roc,'vint=',c_m
          end do
         end if
        end if
@@ -276,9 +278,8 @@ cccc   "poloidal magnetic field":
         stop
        end if
  !!!      open(iunit,file='lhcd/lhdataFT2_05m.dat')
- !!!      open(iunit,file='lhcd/gaus25.dat')
-       open(iunit,file='lhcd/rt_cfg.dat')
-   !!!    open(iunit,file='lhcd/gelik2.dat')
+ !!      open(iunit,file='lhcd/gaus25.dat')
+       open(iunit,file='lhcd/gelik2.dat')
 !!!!!!!!!!!!!  read  physical parameters !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        read(iunit,*)
        read(iunit,*) freq
@@ -389,7 +390,7 @@ cccc   "poloidal magnetic field":
        end if
 10     ispl=i1
       close(iunit)
-      if(ispl.gt.4001) stop 'too many points in spectrum'
+      if(ispl.gt.1001) stop 'too many points in spectrum'
 
 !!!!!!!!!!!!! test !!!!!
       write(*,*)'time=',tcur
@@ -629,7 +630,7 @@ c--------------------------------------------
        stop
       end if
       nvpt=ipt
-
+      open(19,file='lhcd/out/vgrids1.dat')
       do j=1,nr                  ! begin 'rho' cycle
        r=hr*dble(j)
 !!!!sav2008       pn=fn(r)
@@ -691,12 +692,15 @@ c       v2=vz2(j)/vto !Vpar/Vt(rho)
        if(vz2(j).gt.0.9d0*cltn) vz2(j)=0.9d0*cltn
        do i=1,ipt
         vgrid(i,j)=vrj(i)*vto
+        write(19,*) i, j, vgrid(i,j)
        end do
       end do                     ! end 'rho' cycle
+      close(19)
 
 !!!!!!!!!read data !!!!!!!!!!!!
        allocate(vvj(i0),vdfj(i0))
        k=(3-ispectr)/2
+      open(20,file='lhcd/out/vgrids3.dat')
        do j=1,nr
         r=hr*dble(j)
         vt=fvt(r)
@@ -707,6 +711,7 @@ c       v2=vz2(j)/vto !Vpar/Vt(rho)
         end do
         do i=1,ipt
          vrj(i)=vgrid(i,j)/vto   !Vpar/Vt
+         write(20,*) i, j, vrj(i)
          call lock(vvj,i0,vrj(i),klo,khi,ierr)
          if(ierr.eq.1) then
           write(*,*)'lock error in read distribution function'
@@ -722,6 +727,7 @@ c       v2=vz2(j)/vto !Vpar/Vt(rho)
          if(dfundv(i,j).gt.zero) dfundv(i,j)=zero
         end do
        end do
+       close(20)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if(itend0.gt.0) then  ! begin alpha-source renormalisation
@@ -786,6 +792,7 @@ c------------------------------------
       dncount=zero
       vzmin=cltn
       vzmax=-cltn
+      write(*,*)'CCCCLLLLTTTTNNN=',cltn
       kzero=kv
       nrefj=0
 
@@ -839,6 +846,7 @@ c----------------------------------------------
        pda(j)=pda(j)*xwtt
        pdfast(j)=pdfast(j)*xwtt
        pwe(j+1)=(pdl(j)+pdc(j))/vk(j)
+       !!!write(*,*)'VK(J)=',vk(j)
       end do
       pwe(1)=pwe(2)
       pwe(nr+2)=zero
@@ -912,18 +920,23 @@ c----------------------------------------
        write (*,*) 'eta_eff=<Ne>*R*I/P, A/(W*m^2)=',eta_eff !sav2010
        write(*,*) 'nevyazka=', pchg
       end if
+
       if(iterat.le.niterat) then
 c-------------------------------------------
 c   recalculate f' for a new mesh
 c-------------------------------------------
       k=(3-ispectr)/2
+      open(18,file='lhcd/out/vgrids2.dat')
       do j=1,nr
        r=hr*dble(j)
        vt=fvt(r)
        vto=vt/vt0
        if(iterat.gt.0) then
         v1=dmin1(vzmin(j),vz1(j))
+        !write(*,*)'***1***',vzmax(j)
         v2=dmax1(vzmax(j),vz2(j))
+        !write(*,*) '***2***', vzmax(j), v2, vz2(j)
+       ! write(*,*)'FFFF', v1, vzmin(j), vz1(j)
        else
         v1=vzmin(j)
         v2=vzmax(j)
@@ -931,7 +944,9 @@ c-------------------------------------------
        vmax=cltn/vto
        vp1=v1/vto
        vp2=v2/vto
+        !write(*,*) 'AAAAAA', v2, cltn
        call gridvel(vp1,vp2,vmax,cdel,ni1,ni2,ipt1,kpt3,vrj)
+     !!  write(*,*)vp1, vp2, vmax
        do i=1,i0
         vvj(i)=vij(i,j)
         vdfj(i)=dfij(i,j,k) !=dfundv(i,j)*vto**2
@@ -950,12 +965,17 @@ c-------------------------------------------
         end if
         call linf(vvj,vdfj,vrj(i),dfout,klo,khi)
         vgrid(i,j)=vrj(i)*vto
+        write(18,*) j, i, vgrid(i,j)
         dfundv(i,j)=dfout/vto**2
         if(dfundv(i,j).gt.zero) dfundv(i,j)=zero
        end do
        vz1(j)=v1
        vz2(j)=v2
       end do
+      close(18)
+       !if (iterat.gt.1) then
+       !!pause
+       !end if
 !!----------------------------
         ppv1=zero
         ppv2=zero
@@ -968,6 +988,10 @@ c-------------------------------------------
         dncount=zero
         vzmin=cltn
         vzmax=-cltn
+        do j=1,100
+        !write(*,*)'VZMAXJ=',vzmax(j)
+        end do
+      write(*,*)'CLTN=',cltn
         pdl=zero
         pdc=zero
         pda=zero
@@ -1050,11 +1074,17 @@ c------------------------------------------
          ddout=dj(klo)
         end if
         dij(i,j,k)=ddout
-       end do
+        if(ddout.gt.0.1) then
+        !!write(*,*)'DDDDDDDd=',dij(i,j,k)
+        end if
+	end do
        zv1(j,k)=vrj(ipt1)
        zv2(j,k)=vrj(ni1+ni2+ipt1)
       end do
+        !if(ispectr.eq.-1) then
         call view(tcur,1,nnz,ntet)  !writing trajectories into a file
+        !pause
+	!end if
 !!!!!!!!!!!!!!!!!!!!!!!!!!
       if(ismthout.ne.0) then
        do i=1,nrr
@@ -1074,12 +1104,13 @@ c------------------------------------------
         pause
        end if
        call linf(rxx,pwe,rh(j),fout,klo,khi)
-       outpe(j)=fout
+       outpe(j)=fout !*vk(j)
       end do
       pe_out=ol+oc
       rh(1)=zero
 !
       deallocate(vvj,vdfj)
+
       end
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine manager(iterat,iw0,nnz,ntet)
@@ -1273,7 +1304,7 @@ c---------------------------------------
            dcoll(ie+1)=inak
            jrad(inak+1)=0
            lfree=inak+2
-          end if
+          end if  
           if(nrefj(itr).gt.maxref.and.pow.gt.pabs) then !forced absorp
            if(pow.ge.pm(inz)) go to 30 !sav2008
            ib=mbeg(itr)
@@ -1289,6 +1320,8 @@ c---------------------------------------
 30       continue
          pnab=pnab+powexit
 31       continue
+          g=(itet-1)*nnz+inz
+        !!!!!  write(*,*)'POW=',powexit, pow, pm(inz), g
         end do
         if(ipri.gt.1)
      &  write(*,1003)itet,icall1,icall2,nref,lfree-1,nbad1,nbad2
@@ -1374,6 +1407,11 @@ c--------------------------------------
        pow=powal
       end if
       if(pow.le.pabs) iabsorp=1
+      if(pow.le.pabs) then
+      !write(*,*) 'PABSLESS=',pabs,pow
+      else
+      !write(*,*) 'PABSMORE=',pabs,pow
+      end if
       pil=pintld
       pic=pintcl
       pia=pintal
@@ -1535,7 +1573,18 @@ c---------------------------------------------
       if(v.gt.cltn) return
       if(pil.gt.zero) then
        if(v.lt.vzmin(j)) vzmin(j)=v
-       if(v.gt.vzmax(j)) vzmax(j)=v
+  !     if(v.gt.vzmax(j)) then
+  !     write(*,*) 'VVVVVVVVVV'
+   !    pause
+   !    end if
+       if(v.gt.vzmax(j)) then
+      open(37,file='lhcd/out/vzmax.dat',position="append")
+     !!  write(*,*) 'VZMAX<V',vzmax(j),v,j
+       close(37)
+	vzmax(j)=v
+	else
+	! write(*,*) 'VVVVVVVVVV=', vzmax(j)
+       end if
       end if
       pchgl=zero
       pchgc=zero
@@ -1674,9 +1723,9 @@ c---------------------------------------
          zz=rnew2*xly*sitet
          xxx=(r0+rm*xx)/1d2
          zzz=(z0+rm*zz)/1d2 
-!      open(33,file='lhcd/out/dots.dat',position="append")
+      open(33,file='lhcd/out/dots.dat',position="append")
 !      write(33,*)xxx, zzz, nomth, nomnz
-!      close(33)
+      close(33)
 c---------------------------------------
 c absorption
 c---------------------------------------
@@ -1718,9 +1767,9 @@ c----------------------------------------------------------
          zz=rnew*xly*sitet
          xxx=(r0+rm*xx)/1d2
          zzz=(z0+rm*zz)/1d2 
-!      open(33,file='lhcd/out/dots.dat',position="append")
-!      write(33,*)xxx, zzz, nomth, nomnz
-!      close(33)
+      open(33,file='lhcd/out/dots.dat',position="append")
+      write(33,*)xxx, zzz, nomth, nomnz
+      close(33)
       if(ipri.gt.2) write (*,*) 'from r=',rexi,'to r=',rnew
 
 c---------------------------------------
@@ -2108,7 +2157,7 @@ c---------------------------------------
       common /cnew/ inew !est !sav2008
       common/fj/dhdm,dhdnr,dhdtet,dhdr,ddn,dhdn3,dhdv2v,dhdu2u
       common/direct/znakstart
-      common/metrika/g11,g12,g22,g33,gg,g,si,co
+      common/metrika/g11,g12,g22,g33,gg,g,si,co,g22zz
       common/fjham/ham
       parameter(zero=0.d0,one=1.d0,two=2.d0)
       parameter(clt=3.d10)
@@ -2180,6 +2229,11 @@ c dispersion equation
 c--------------------------------------
 !sav2008      if(ivar.eq.2) yn2=(ynz-yn3*co*g3v)/(si*g2v1)
       ynz=yn2*si*g2v1+yn3*co*g3v
+      !if(ynz.lt.1.5) then
+      !open(39,file='lhcd/out/ynz.dat',position="append")
+     !! write(39,*)'YNZ=',ynz, yn2*si*g2v1, yn3*co*g3v, yn2, si, g2v1
+      !close(39)
+      !end if
       ynzq=ynz**2
       as=e1
       bs=-(e1**2-e2**2+e1*e3-(e1+e3)*ynzq)
@@ -2405,7 +2459,7 @@ c--------------------------------------
         dfdv=fder
         vfound=vz
         cf2=ptet
-	cf6=yny
+	cf6=yn2/g22zz
         aimh=wpq/ww**2*pi*sl1*cltn**2/ynzq
         pdecv=dabs(aimh/dhdnr/xsz)
 !!        pdec1=-pdecv*dfdv
@@ -3082,7 +3136,7 @@ cu    uses derivs,mmid,pzextr
       common /beo/ iroot
       common /bdeo/ ivar
       common /cnew/ inew !est !sav2008
-      common/metrika/g11,g12,g22,g33,gg,g,si,co !sav2009
+      common/metrika/g11,g12,g22,g33,gg,g,si,co,g22zz !sav2009
       parameter(zero=0.d0,rhostart=1.d0,ntry_max=5)
 
       ifail=1
@@ -3096,12 +3150,18 @@ cu    uses derivs,mmid,pzextr
        call disp2(pa,xm,tet,xnr,prt,prm)
        if(inew.gt.0) then !g' in ST and poloidal grill direction
         yn3=zero                 !Nfi=0
-        xm=yn*dsqrt(g22)/si      !given Npar at Nfi=0
+        !!xm=yn*dsqrt(g22)/si      !given Npar at Nfi=0
+        xm=yn*dsqrt(g22)         !given Npol at Nfi=0
+        g22zz=dsqrt(g22)
+        open(49,file='lhcd/out/magnpole.dat',position="append")
+        !write(49,*)'si=',si,'yn=',yn,'xm=',xm,'g22=',dsqrt(g22)
+        write(49,*)'yn=',yn,'xm=',xm
+        close(49)
 !!        xm=yn*dsqrt(g22)         !given yn=(N*jpol) at Nfi=0
        else !usual tokamak and toroidal grill direction
         xm=zero               !N2=0
         yn3=yn*dsqrt(g33)/co  !if given Npar at Nteta=0
-!!        yn3=yn*dsqrt(g33)       !if given Nfi at Nteta=0
+     !!   yn3=yn*dsqrt(g33)       !if given Nfi at Nteta=0
        end if
        ivar=0
        iroot=2
@@ -3119,15 +3179,18 @@ cu    uses derivs,mmid,pzextr
       real*8 vz,fder
       integer j,ifound,i,klo,khi,ierr,nvpt,nvp
       real*8,dimension(:),allocatable:: vzj,dfdvj
-      real*8 vgrid,dfundv,vlf,vrt,dflf,dfrt,dfout
+      real*8 vgrid,dfundv,vlf,vrt,dflf,dfrt,dfout,dout,dout1,dout2
       common/gridv/vgrid(101,100),dfundv(101,100),nvpt
       common /a0ghp/ vlf,vrt,dflf,dfrt
       nvp=nvpt
       allocate(vzj(nvp),dfdvj(nvp))
+ !     open(17,file='lhcd/out/vgrids.dat')
       do i=1,nvp
        vzj(i)=vgrid(i,j)
        dfdvj(i)=dfundv(i,j)
+!       write(17,*) i, j, vgrid(i,30), dfundv(i,30)
       end do
+!      close(17)
       call lock2(vzj,nvp,vz,klo,khi,ierr)
       if(ierr.eq.0) then !vgrid(1,j) <= vz <= vgrid(nvpt,j)
        call linf(vzj,dfdvj,vz,dfout,klo,khi)
@@ -3135,6 +3198,10 @@ cu    uses derivs,mmid,pzextr
        vlf=vzj(klo)
        vrt=vzj(khi)
        fder=dfout
+       dout=(dfdvj(khi)-dfdvj(klo))/(vzj(khi)-vzj(klo))
+       dout1=(dfdvj(khi)-dfdvj(klo))
+       dout2=(vzj(khi)-vzj(klo))
+  !     write(*,*) dout,vzj(khi),vzj(klo)
        dflf=dfdvj(klo)
        dfrt=dfdvj(khi)
       else if(ierr.eq.1) then !vz < vgrid(1,j)
@@ -3862,6 +3929,9 @@ c
       implicit real*8 (a-h,o-z)
       dimension x(*),y(*)
        dout=(y(khi)-y(klo))/(x(khi)-x(klo))
+     !!  if(x(khi).eq.x(klo)) then
+     !!  dout=(y(khi)-y(klo))
+     !!  end if
        fout=y(klo)+dout*(t-x(klo))
       end
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -4191,42 +4261,27 @@ cu    uses derivs
       fout=znak*sum
       end
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
       subroutine gridvel(v1,v2,vmax,cdel,ni1,ni2,ipt1,kpt3,vrj)
-            implicit none
-            integer ni1,ni2,ipt1,kpt1,kpt2,kpt3,k
-            double precision vrj(*),v1,v2,v12,vmax,cdel
-      
-            kpt1=ipt1-1
-            kpt2=ni1+ni2+1
-      
-            do k=1,kpt1 !0<=v<v1
-            vrj(k)=dble(k-1)*v1/dble(kpt1)
-                  end do
-      
-                  v12=v1+(v2-v1)*cdel
-            do k=1,ni1+1 !v1<=v<=v12
-            vrj(k+kpt1)=v1+dble(k-1)*(v12-v1)/dble(ni1)
-            end do
-      
-            if ((vmax-v2).gt.0.5) then
-                  do k=2,ni2+1 !!v12<v<=v2
-            vrj(k+kpt1+ni1)=v12+dble(k-1)*(v2-v12)/dble(ni2)
-            end do
-            do k=1,kpt3 !v2<v<=vmax
-            vrj(k+kpt1+kpt2)=v2+dble(k)*(vmax-v2)/dble(kpt3)
-            end do
-      
-            else
-            do k=2,ni2+1+kpt3 !!v12<v<=v2
-            vrj(k+kpt1+ni1)=v12+dble(k-1)*(vmax-v12)/dble(ni2)
-            end do
-      
-            end if
-      
-      
-      
-      
-            end
+      implicit none
+      integer ni1,ni2,ipt1,kpt1,kpt2,kpt3,k
+      double precision vrj(*),v1,v2,v12,vmax,cdel
+      kpt1=ipt1-1
+      kpt2=ni1+ni2+1
+      do k=1,kpt1  !0<=v<v1
+      vrj(k)=dble(k-1)*v1/dble(kpt1)
+      end do
+      v12=v1+(v2-v1)*cdel
+      do k=1,ni1+1 !v1<=v<=v12
+       vrj(k+kpt1)=v1+dble(k-1)*(v12-v1)/dble(ni1)
+      end do
+      do k=2,ni2+1 !!v12<v<=v2
+       vrj(k+kpt1+ni1)=v12+dble(k-1)*(v2-v12)/dble(ni2)
+      end do     
+      do k=1,kpt3  !v2<v<=vmax
+       vrj(k+kpt1+kpt2)=v2+dble(k)*(vmax-v2)/dble(kpt3)
+      end do
+      end
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine fsmoth4(x,y,n,ys)
       implicit real*8 (a-h,o-z)
@@ -4338,26 +4393,16 @@ cc      common /xn1xn2/ an1,an2
       common/b0/ itend0
       real*8 vthcg,npoli
       common /a0ghp/ vlf,vrt,dflf,dfrt
-      integer unit_bias
-      parameter (unit_bias = 10)
       parameter(m=7,pleft=1.d-10) !m may be chaged together with name(m)
       dimension ptt(m),pll(m),pcc(m),paa(m)
       dimension pt_c(m),pl_c(m),pc_c(m),pa_c(m)
-      character(40) fname
-      character*40 name(m)
+      character*20 name(m)
       save name !sav#
       data name/'lhcd/out/1.dat','lhcd/out/2.dat','lhcd/out/3.dat'
      &,'lhcd/out/4.dat','lhcd/out/5.dat'
      &,'lhcd/out/rest.dat','lhcd/out/traj.dat'/
       parameter(zero=0.d0, clt=3.d10)
       if(iview.eq.0) return
-      print *, 'view_time=',tview
-      print *, name(m)
-      write(fname,'("lhcd/out/traj", f17.16,".dat")') tview
-      print *, fname
-      name(m) = fname
-      print *, name(m)
-
       htet=zero
       h=1d0/dble(nr+1)
       if(ntet.ne.1) htet=(tet2-tet1)/(ntet-1)
@@ -4393,12 +4438,12 @@ cc      common /xn1xn2/ an1,an2
       close(1)
 
       do n=1,m
-       open(n+unit_bias,file=name(n))
-       write(n+unit_bias,*)
-       close(n+unit_bias)
-       open(n+unit_bias,file=name(n))
-       write(n+unit_bias,3)
-       write(n+unit_bias,*)
+       open(n,file=name(n))
+       write(n,*)
+       close(n)
+       open(n,file=name(n))
+       write(n,3)
+       write(n,*)
        ptt(n)=zero
        pll(n)=zero
        pcc(n)=zero
@@ -4498,10 +4543,8 @@ cc         xn2=an2(i)
           nturn=nturn+1
           jznak=-jznak
          end if
-         mn = nturn + unit_bias
-         write(mn, 7) x,z,xr,th,parn,npoli,pt,pl,pc,pa,ifast,idir,itr
-         mm = m + unit_bias
-         write(mm, 7) x,z,xr,th,parn,npoli,pt,pl,pc,vthcg,ifast,idir,itr
+         write(nturn,7) x,z,xr,th,parn,npoli,pt,pl,pc,pa,ifast,idir,itr
+         write(m,7) x,z,xr,th,parn,npoli,pt,pl,pc,vthcg,ifast,idir,itr
          do n=m,nturn,-1
           pt_c(n)=pt
           pl_c(n)=pl
@@ -4514,7 +4557,7 @@ cc         xn2=an2(i)
         if(jchek.ne.0) then  !continue this trajectory
          ib=idnint(dland(ie+1))
          ie=idnint(dcoll(ie+1))
-         goto10
+         goto10 
         end if
 11      continue
         do n=1,m
@@ -4524,13 +4567,13 @@ cc         xn2=an2(i)
          paa(n)=paa(n)+pa_c(n)
         end do
         if(itr.lt.nnz*ntet) then
-         write(m+unit_bias,*)
-         write(nturn+unit_bias,*)
+         write(m,*)
+         write(nturn,*)
         end if
        end if
       end do
       do n=1,m
-       close(n+unit_bias)
+       close(n)
       end do
       do n=1,m
        ptt(n)=ptt(n)/dble(ntraj)
